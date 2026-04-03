@@ -4,5 +4,6 @@
     {
         public int Id { get; set; }
         public string Name { get; set; } // User, Product, Order,...
+        public string NormalizedName { get; set; } // CREATE, UPDATE
     }
 }

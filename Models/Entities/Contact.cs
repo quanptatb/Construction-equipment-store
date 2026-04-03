@@ -9,9 +9,7 @@
         public string Phone { get; set; }
         public string Subject { get; set; }
         public string Message { get; set; }
-
-        public string Status { get; set; } // pending | resolved
-
+        public int StatusId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // 🔥 Reply flow
@@ -20,5 +18,6 @@
 
         public int? RepliedBy { get; set; }
         public User Replier { get; set; }
+        public ContactStatus Status { get; set; }
     }
 }
