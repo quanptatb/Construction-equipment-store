@@ -9,11 +9,12 @@
 
         public string Title { get; set; }
         public int MediaId { get; set; }
-        public string FileType { get; set; }
+        public int FileTypeId { get; set; }
 
         public int SortOrder { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public Media Media { get; set; }
+        public FileType FileType { get; set; }
     }
 }
