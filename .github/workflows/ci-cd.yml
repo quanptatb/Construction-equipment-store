@@ -1,0 +1,132 @@
+name: GitFlow CI-CD Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+      - release/**
+      - main
+      - hotfix/**
+  pull_request:
+    branches:
+      - develop
+      - main
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  BUILD_CONFIGURATION: Release
+
+jobs:
+
+# =========================
+# CI - BUILD & TEST
+# =========================
+  ci:
+    name: CI - Build & Test
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Cache NuGet
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+
+# =========================
+# PACKAGE (RELEASE BRANCH)
+# =========================
+  package:
+    name: Package for Release
+    needs: ci
+    runs-on: windows-latest
+
+    if: startsWith(github.ref, 'refs/heads/release/')
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Publish
+      run: dotnet publish -c ${{ env.BUILD_CONFIGURATION }} -o publish
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-package
+        path: publish
+
+# =========================
+# DEPLOY PRODUCTION (MAIN)
+# =========================
+  deploy_main:
+    name: Deploy Production
+    needs: ci
+    runs-on: windows-latest
+
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Publish
+      run: dotnet publish -c ${{ env.BUILD_CONFIGURATION }} -o publish
+
+    # 👉 Sau này thay bằng deploy thật
+    - name: Upload production artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: production-build
+        path: publish
+
+# =========================
+# HOTFIX DEPLOY (URGENT)
+# =========================
+  deploy_hotfix:
+    name: Deploy Hotfix
+    needs: ci
+    runs-on: windows-latest
+
+    if: startsWith(github.ref, 'refs/heads/hotfix/')
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Publish
+      run: dotnet publish -c ${{ env.BUILD_CONFIGURATION }} -o publish
+
+    - name: Upload hotfix artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: hotfix-build
+        path: publish
