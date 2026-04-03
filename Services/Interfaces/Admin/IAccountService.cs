@@ -1,6 +1,10 @@
-﻿namespace VietMachWeb.Services.Interfaces.Admin
+﻿using VietMachWeb.Models.DTOs.Admin;
+
+namespace VietMachWeb.Services.Interfaces.Admin
 {
-    public class IAccountService
+    public interface IAccountService
     {
+        Task<bool> LoginAsync(LoginRequestDTO request, HttpContext httpContext);
+        Task LogoutAsync(HttpContext httpContext);
     }
 }

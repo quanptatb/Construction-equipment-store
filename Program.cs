@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using VietMachWeb.Configurations;
 using VietMachWeb.Data;
+using VietMachWeb.Services.Implementations.Admin;
+using VietMachWeb.Services.Interfaces.Admin;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,8 +29,24 @@ builder.Services.Configure<EmailSettings>(
 builder.Services.AddHttpContextAccessor();
 
 // =======================
-// 4. Dependency Injection for Services
+// 4. Authentication (COOKIE)
 // =======================
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/admin/login";
+        options.AccessDeniedPath = "/admin/login";
+
+        options.ExpireTimeSpan = TimeSpan.FromHours(2);
+        options.SlidingExpiration = true;
+    });
+
+builder.Services.AddAuthorization();
+
+// =======================
+// 5. Dependency Injection for Services
+// =======================
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 
 
@@ -44,6 +63,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
